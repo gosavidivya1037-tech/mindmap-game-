@@ -1,2 +1,3 @@
-# mindmatch-game-
-it is gaming app  created using claud ai by giving a professional prompt and customized it.
+# mindmatch-game
+click above link to play the game Users/macair/Downloads/mindmatch.html
+
