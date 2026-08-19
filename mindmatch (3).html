@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>MindMatch — Challenge Your Memory</title>
+<style>
+:root{
+  --navy:#07111F;
+  --dark-blue:#0B172A;
+  --panel:#101d33;
+  --electric:#3B82F6;
+  --purple:#8B5CF6;
+  --cyan:#22D3EE;
+  --green:#22C55E;
+  --white:#F8FAFC;
+  --muted:#8CA0C4;
+  --danger:#F87171;
+  --radius:18px;
+  --radius-sm:12px;
+  --shadow:0 20px 50px rgba(3,8,20,.55);
+  --border:1px solid rgba(148,178,255,.14);
+  --dur:.35s;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(139,92,246,.20), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(59,130,246,.18), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(34,211,238,.10), transparent 55%),
+    var(--navy);
+  color:var(--white);
+  min-height:100%;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ---------- Ambient particles ---------- */
+#particles{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.particle{
+  position:absolute; border-radius:50%;
+  background:radial-gradient(circle, rgba(139,92,246,.55), transparent 70%);
+  filter:blur(1px);
+  animation:float 14s ease-in-out infinite;
+  opacity:.5;
+}
+@keyframes float{
+  0%,100%{ transform:translateY(0) translateX(0); }
+  50%{ transform:translateY(-40px) translateX(20px); }
+}
+
+.app{ position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; }
+
+/* ---------- Utility ---------- */
+.glass{
+  background:linear-gradient(155deg, rgba(24,38,66,.65), rgba(11,23,42,.55));
+  border:var(--border);
+  border-radius:var(--radius);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  box-shadow:var(--shadow);
+}
+.screen{ display:none; flex:1; flex-direction:column; padding:28px 20px 60px; max-width:960px; margin:0 auto; width:100%; }
+.screen.active{ display:flex; animation:fadeIn .4s ease; }
+@keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+.btn{
+  font-family:inherit;
+  cursor:pointer;
+  border:none;
+  border-radius:14px;
+  padding:15px 26px;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:.04em;
+  color:var(--white);
+  transition:transform var(--dur) ease, box-shadow var(--dur) ease, filter var(--dur) ease;
+  position:relative;
+}
+.btn:focus-visible{ outline:3px solid var(--cyan); outline-offset:3px; }
+.btn:active{ transform:scale(.97); }
+.btn-primary{
+  background:linear-gradient(120deg, var(--electric), var(--purple));
+  box-shadow:0 10px 30px rgba(59,130,246,.35);
+}
+.btn-primary:hover{ filter:brightness(1.1); transform:translateY(-2px); }
+.btn-ghost{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(148,178,255,.22);
+  color:var(--white);
+}
+.btn-ghost:hover{ background:rgba(255,255,255,.09); border-color:var(--cyan); }
+.btn-small{ padding:10px 16px; font-size:13px; border-radius:10px; }
+.btn-block{ width:100%; }
+
+.menu-stack{ display:flex; flex-direction:column; gap:14px; width:100%; max-width:340px; margin:0 auto; }
+
+.icon-btn{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(148,178,255,.18);
+  color:var(--muted);
+  width:42px; height:42px;
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px;
+  transition:all var(--dur);
+}
+.icon-btn:hover{ color:var(--white); border-color:var(--cyan); }
+.icon-btn:focus-visible{ outline:3px solid var(--cyan); outline-offset:2px; }
+
+.topbar{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; max-width:960px; margin:0 auto; width:100%; }
+.logo{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.06em; font-size:15px; cursor:pointer; }
+.logo-mark{
+  width:32px; height:32px; border-radius:9px;
+  background:linear-gradient(135deg, var(--electric), var(--purple));
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+  box-shadow:0 0 18px rgba(139,92,246,.55);
+}
+
+/* ---------- Home ---------- */
+.home-hero{ text-align:center; margin:6vh 0 30px; }
+.home-eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:12px; letter-spacing:.16em; color:var(--cyan);
+  text-transform:uppercase; margin-bottom:18px;
+  padding:6px 14px; border:1px solid rgba(34,211,238,.35); border-radius:999px;
+  background:rgba(34,211,238,.06);
+}
+.home-title{
+  font-size:clamp(42px, 10vw, 76px);
+  font-weight:900;
+  letter-spacing:.01em;
+  margin:0;
+  background:linear-gradient(120deg, var(--white) 30%, var(--cyan) 60%, var(--purple) 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  line-height:1.02;
+}
+.home-tagline{ font-size:19px; color:var(--muted); margin:14px 0 6px; font-weight:600; }
+.home-desc{ font-size:14.5px; color:var(--muted); max-width:440px; margin:0 auto 34px; line-height:1.6; }
+
+.home-cards-preview{ display:flex; gap:12px; justify-content:center; margin-bottom:36px; }
+.mini-card{
+  width:46px; height:60px; border-radius:10px;
+  background:linear-gradient(150deg, var(--dark-blue), #1c2e52);
+  border:1px solid rgba(148,178,255,.25);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+  animation:bob 3s ease-in-out infinite;
+  box-shadow:0 8px 20px rgba(0,0,0,.4);
+}
+.mini-card:nth-child(2){ animation-delay:.3s; }
+.mini-card:nth-child(3){ animation-delay:.6s; }
+.mini-card:nth-child(4){ animation-delay:.9s; }
+@keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-10px) rotate(2deg);} }
+
+/* ---------- Difficulty picker ---------- */
+.diff-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin:26px 0; }
+.diff-card{
+  padding:22px 18px; text-align:left; cursor:pointer;
+  border-radius:var(--radius-sm); border:var(--border);
+  background:rgba(255,255,255,.03);
+  transition:all var(--dur);
+}
+.diff-card:hover, .diff-card:focus-visible{ border-color:var(--cyan); transform:translateY(-3px); background:rgba(34,211,238,.06); outline:none; }
+.diff-card.selected{ border-color:var(--cyan); background:rgba(34,211,238,.09); box-shadow:0 0 0 2px rgba(34,211,238,.35); }
+.diff-name{ font-weight:800; font-size:17px; margin-bottom:4px; }
+.diff-meta{ font-size:12.5px; color:var(--muted); }
+.diff-best{ font-size:12px; color:var(--green); margin-top:8px; font-weight:700; }
+
+/* ---------- Stats bar ---------- */
+.stats-bar{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+  padding:16px; margin-bottom:22px;
+}
+.stat{ text-align:center; }
+.stat-label{ font-size:10.5px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; }
+.stat-value{ font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; }
+.stat-value.accent{ color:var(--cyan); }
+
+/* ---------- Game board ---------- */
+.board-wrap{ display:flex; justify-content:center; }
+.board{
+  display:grid;
+  gap:10px;
+  perspective:1000px;
+  width:100%;
+  max-width:560px;
+}
+.board.grid-4x4{ grid-template-columns:repeat(4,1fr); }
+.board.grid-6x4{ grid-template-columns:repeat(4,1fr); }
+.board.grid-6x6{ grid-template-columns:repeat(6,1fr); }
+
+.card{
+  aspect-ratio:3/4;
+  cursor:pointer;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.2,.8,.2,1);
+  border-radius:12px;
+}
+.card:focus-visible{ outline:3px solid var(--cyan); outline-offset:3px; }
+.card.flipped{ transform:rotateY(180deg); }
+.card.matched .card-face.front{
+  box-shadow:0 0 0 2px var(--green), 0 0 22px rgba(34,197,94,.45);
+}
+.card.matched{ animation:pop .45s ease; }
+.card.mismatch{ animation:shake .4s ease; }
+@keyframes pop{ 50%{ transform:scale(1.08) rotateY(180deg);} }
+@keyframes shake{ 20%,60%{ transform:translateX(-6px);} 40%,80%{ transform:translateX(6px);} }
+
+.card-face{
+  position:absolute; inset:0;
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  border:1px solid rgba(148,178,255,.2);
+}
+.card-face.back{
+  background:
+    linear-gradient(155deg, rgba(139,92,246,.18), transparent 60%),
+    linear-gradient(150deg, #14213f, #0c1730);
+  box-shadow:inset 0 0 0 1px rgba(139,92,246,.15), 0 6px 16px rgba(0,0,0,.35);
+}
+.card-face.back::after{
+  content:'◆'; font-size:15px; color:rgba(139,92,246,.55);
+}
+.card-face.front{
+  background:linear-gradient(150deg, #16264a, #0e1a33);
+  transform:rotateY(180deg);
+  font-size:clamp(22px,6vw,32px);
+  box-shadow:0 6px 16px rgba(0,0,0,.3);
+}
+.card:hover .card-face.back{ border-color:rgba(34,211,238,.4); }
+
+/* ---------- Results ---------- */
+.results-hero{ text-align:center; margin:20px 0 10px; }
+.results-title{
+  font-size:clamp(28px,7vw,44px); font-weight:900; margin:0;
+  background:linear-gradient(120deg, var(--cyan), var(--green));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.pb-badge{
+  display:inline-flex; align-items:center; gap:8px; margin:14px auto 0;
+  padding:8px 18px; border-radius:999px; font-weight:800; font-size:13px;
+  background:rgba(234,179,8,.12); color:#FCD34D; border:1px solid rgba(234,179,8,.35);
+}
+.score-display{ text-align:center; margin:28px 0; }
+.score-num{ font-size:clamp(44px,12vw,72px); font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.stars{ font-size:26px; letter-spacing:4px; margin-top:6px; }
+.rating-label{ color:var(--muted); font-size:13px; letter-spacing:.08em; text-transform:uppercase; margin-top:4px; }
+
+.results-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:24px 0; }
+.results-item{ padding:16px; text-align:center; }
+.results-item-label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+.results-item-value{ font-size:22px; font-weight:800; }
+
+/* ---------- Leaderboard ---------- */
+.lb-row{
+  display:grid; grid-template-columns:44px 1fr auto auto; gap:12px; align-items:center;
+  padding:14px 16px; border-radius:12px; margin-bottom:8px;
+  background:rgba(255,255,255,.03); border:1px solid rgba(148,178,255,.1);
+}
+.lb-rank{ font-size:19px; text-align:center; }
+.lb-name{ font-weight:700; font-size:14.5px; }
+.lb-score{ font-weight:800; color:var(--cyan); font-size:14.5px; }
+.lb-time{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.demo-tag{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.tab-row{ display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.tab-btn{
+  background:rgba(255,255,255,.04); border:1px solid rgba(148,178,255,.16); color:var(--muted);
+  padding:9px 16px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer;
+}
+.tab-btn.active{ background:linear-gradient(120deg, var(--electric), var(--purple)); color:var(--white); border-color:transparent; }
+.tab-btn:focus-visible{ outline:3px solid var(--cyan); }
+
+/* ---------- Settings ---------- */
+.setting-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px; border-radius:12px; margin-bottom:10px;
+  background:rgba(255,255,255,.03); border:1px solid rgba(148,178,255,.1);
+}
+.setting-label{ font-weight:700; font-size:14.5px; }
+.setting-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+.switch{ position:relative; width:48px; height:27px; flex-shrink:0; }
+.switch input{ opacity:0; width:0; height:0; }
+.slider{
+  position:absolute; inset:0; border-radius:999px; cursor:pointer;
+  background:rgba(148,178,255,.2); transition:.3s;
+}
+.slider::before{
+  content:''; position:absolute; width:21px; height:21px; left:3px; top:3px;
+  background:var(--white); border-radius:50%; transition:.3s;
+}
+input:checked + .slider{ background:linear-gradient(120deg, var(--electric), var(--purple)); }
+input:checked + .slider::before{ transform:translateX(21px); }
+input:focus-visible + .slider{ outline:3px solid var(--cyan); outline-offset:2px; }
+.select-inline{
+  background:rgba(255,255,255,.04); color:var(--white); border:1px solid rgba(148,178,255,.2);
+  border-radius:8px; padding:8px 12px; font-family:inherit; font-size:13px; cursor:pointer;
+}
+
+/* ---------- Themes grid ---------- */
+.theme-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:24px; }
+.theme-card{
+  padding:16px; text-align:center; border-radius:12px; border:1px solid rgba(148,178,255,.14);
+  background:rgba(255,255,255,.03); position:relative;
+}
+.theme-card.locked{ opacity:.45; }
+.theme-swatch{ width:100%; height:36px; border-radius:8px; margin-bottom:10px; }
+.theme-name{ font-size:12.5px; font-weight:700; }
+.theme-lock{ font-size:11px; color:var(--muted); margin-top:4px; }
+
+/* ---------- Section heading ---------- */
+.section-title{ font-size:22px; font-weight:800; margin:0 0 6px; }
+.section-sub{ color:var(--muted); font-size:13.5px; margin:0 0 24px; }
+
+/* ---------- How to play / about ---------- */
+.info-block{ padding:22px; margin-bottom:14px; }
+.info-block h3{ margin:0 0 8px; font-size:15.5px; color:var(--cyan); }
+.info-block p, .info-block li{ color:var(--muted); font-size:14px; line-height:1.65; }
+.step-num{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:24px; height:24px; border-radius:7px; font-size:12px; font-weight:800;
+  background:linear-gradient(120deg, var(--electric), var(--purple)); margin-right:10px; flex-shrink:0;
+}
+.step-row{ display:flex; align-items:flex-start; gap:2px; margin-bottom:14px; }
+
+/* ---------- Portfolio ---------- */
+.tech-field{ margin-bottom:12px; }
+.tech-field label{ display:block; font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.tech-field input{
+  width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(148,178,255,.2); color:var(--white);
+  border-radius:8px; padding:10px 12px; font-family:inherit; font-size:13.5px;
+}
+.tech-field input:focus-visible{ outline:2px solid var(--cyan); border-color:var(--cyan); }
+.feature-list{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+.feature-item{ display:flex; gap:8px; align-items:center; font-size:13px; color:var(--muted); padding:10px 12px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid rgba(148,178,255,.1); }
+.arch-tree{ font-size:13px; color:var(--muted); line-height:2; padding:18px; white-space:pre; overflow-x:auto; }
+
+/* ---------- Toast / celebration ---------- */
+#toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(120%);
+  padding:14px 22px; border-radius:12px; font-weight:700; font-size:14px;
+  background:linear-gradient(120deg, var(--electric), var(--purple)); color:white;
+  box-shadow:0 12px 30px rgba(0,0,0,.4); z-index:50; transition:transform .4s cubic-bezier(.2,.9,.3,1.2);
+}
+#toast.show{ transform:translateX(-50%) translateY(0); }
+
+.confetti-piece{
+  position:fixed; top:-20px; width:8px; height:14px; z-index:60; pointer-events:none;
+  animation:fall linear forwards;
+}
+@keyframes fall{ to{ transform:translateY(105vh) rotate(540deg); opacity:.2; } }
+
+.footer-back{ margin-top:auto; padding-top:30px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width:640px){
+  .home-title{ font-size:44px; }
+  .results-grid{ grid-template-columns:repeat(2,1fr); }
+  .stats-bar{ grid-template-columns:repeat(2,1fr); row-gap:14px; }
+  .card-face.front{ font-size:20px; }
+}
+@media (min-width:900px){
+  .board{ max-width:620px; }
+}
+.center-actions{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:22px; }
+.hidden{ display:none !important; }
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="logo" tabindex="0" role="button" aria-label="Go to home screen" onclick="goHome()" onkeydown="if(event.key==='Enter')goHome()">
+      <div class="logo-mark">🧠</div>
+      MINDMATCH
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="icon-btn" title="Settings" aria-label="Settings" onclick="showScreen('settings')">⚙️</button>
+    </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <main id="screen-home" class="screen active">
+    <div class="home-hero">
+      <div class="home-eyebrow">🎮 Memory Training Game</div>
+      <h1 class="home-title">MINDMATCH</h1>
+      <p class="home-tagline">Challenge Your Memory.</p>
+      <p class="home-desc">Train your memory, improve your focus, and beat your best score.</p>
+      <div class="home-cards-preview" aria-hidden="true">
+        <div class="mini-card">🚀</div>
+        <div class="mini-card">⭐</div>
+        <div class="mini-card">🎯</div>
+        <div class="mini-card">💎</div>
+      </div>
+    </div>
+
+    <div class="menu-stack">
+      <button class="btn btn-primary btn-block" onclick="showScreen('difficulty')">PLAY NOW</button>
+      <button class="btn btn-ghost btn-block" onclick="showScreen('howtoplay')">HOW TO PLAY</button>
+      <button class="btn btn-ghost btn-block" onclick="renderLeaderboard(); showScreen('leaderboard')">LEADERBOARD</button>
+      <button class="btn btn-ghost btn-block" onclick="showScreen('settings')">SETTINGS</button>
+      <button class="btn btn-ghost btn-block" onclick="showScreen('about')">ABOUT</button>
+    </div>
+  </main>
+
+  <!-- ============ DIFFICULTY ============ -->
+  <section id="screen-difficulty" class="screen">
+    <h2 class="section-title">Choose Your Difficulty</h2>
+    <p class="section-sub">Bigger grids mean more pairs to remember.</p>
+    <div class="diff-grid" id="diffGrid"></div>
+    <div class="center-actions">
+      <button class="btn btn-primary" id="startGameBtn" onclick="startGame()">START GAME</button>
+      <button class="btn btn-ghost" onclick="showScreen('home')">BACK</button>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="screen-game" class="screen">
+    <div class="glass stats-bar">
+      <div class="stat"><div class="stat-label">Time</div><div class="stat-value" id="statTime">00:00</div></div>
+      <div class="stat"><div class="stat-label">Moves</div><div class="stat-value" id="statMoves">0</div></div>
+      <div class="stat"><div class="stat-label">Matches</div><div class="stat-value" id="statMatches">0 / 0</div></div>
+      <div class="stat"><div class="stat-label">Accuracy</div><div class="stat-value accent" id="statAccuracy">100%</div></div>
+    </div>
+    <div class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="Memory card grid"></div>
+    </div>
+    <div class="center-actions">
+      <button class="btn btn-ghost btn-small" onclick="restartCurrentGame()">RESTART</button>
+      <button class="btn btn-ghost btn-small" onclick="showScreen('difficulty')">CHANGE DIFFICULTY</button>
+      <button class="btn btn-ghost btn-small" onclick="goHome()">MAIN MENU</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="screen-results" class="screen">
+    <div class="results-hero">
+      <h2 class="results-title" id="resultsHeading">MEMORY MASTER!</h2>
+      <div class="pb-badge hidden" id="pbBadge">🏆 NEW PERSONAL BEST!</div>
+    </div>
+    <div class="score-display">
+      <div class="stat-label">Final Score</div>
+      <div class="score-num" id="finalScore">0</div>
+      <div class="stars" id="ratingStars">⭐⭐⭐</div>
+      <div class="rating-label" id="ratingLabel">Excellent</div>
+    </div>
+    <div class="results-grid">
+      <div class="glass results-item"><div class="results-item-label">Time</div><div class="results-item-value" id="rTime">00:00</div></div>
+      <div class="glass results-item"><div class="results-item-label">Moves</div><div class="results-item-value" id="rMoves">0</div></div>
+      <div class="glass results-item"><div class="results-item-label">Accuracy</div><div class="results-item-value" id="rAccuracy">0%</div></div>
+      <div class="glass results-item"><div class="results-item-label">Pairs</div><div class="results-item-value" id="rPairs">0/0</div></div>
+    </div>
+    <div class="glass" style="padding:16px; text-align:center; margin-bottom:10px;">
+      <div class="stat-label">Best Score (this difficulty)</div>
+      <div class="results-item-value" id="rBest">—</div>
+    </div>
+    <div class="center-actions">
+      <button class="btn btn-primary" onclick="restartCurrentGame()">PLAY AGAIN</button>
+      <button class="btn btn-ghost" onclick="nextDifficulty()">NEXT DIFFICULTY</button>
+      <button class="btn btn-ghost" onclick="goHome()">MAIN MENU</button>
+    </div>
+  </section>
+
+  <!-- ============ LEADERBOARD ============ -->
+  <section id="screen-leaderboard" class="screen">
+    <h2 class="section-title">Leaderboard</h2>
+    <p class="section-sub">Top scores for this session · <span class="demo-tag">sample entries marked DEMO</span></p>
+    <div class="tab-row" id="lbTabs"></div>
+    <div id="lbList"></div>
+    <div class="center-actions">
+      <button class="btn btn-ghost" onclick="goHome()">BACK TO MENU</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="screen-settings" class="screen">
+    <h2 class="section-title">Settings</h2>
+    <p class="section-sub">Preferences apply for this session.</p>
+
+    <div class="setting-row">
+      <div><div class="setting-label">Sound Effects</div><div class="setting-sub">Flip, match, and click sounds</div></div>
+      <label class="switch"><input type="checkbox" id="setSfx" checked onchange="settings.sfx=this.checked"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Background Music</div><div class="setting-sub">Ambient loop while playing</div></div>
+      <label class="switch"><input type="checkbox" id="setMusic" onchange="settings.music=this.checked"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Vibration</div><div class="setting-sub">Haptic feedback on supported devices</div></div>
+      <label class="switch"><input type="checkbox" id="setVibration" checked onchange="settings.vibration=this.checked"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Dark Mode</div><div class="setting-sub">MindMatch is designed dark-first</div></div>
+      <label class="switch"><input type="checkbox" id="setDark" checked onchange="settings.dark=this.checked"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Animation Quality</div><div class="setting-sub">Reduce for low-power devices</div></div>
+      <select class="select-inline" id="setAnim" onchange="settings.animQuality=this.value">
+        <option value="high">High</option>
+        <option value="standard" selected>Standard</option>
+        <option value="reduced">Reduced</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Reset Progress</div><div class="setting-sub">Clears stats, scores, and unlocked themes</div></div>
+      <button class="btn btn-ghost btn-small" onclick="resetProgress()">RESET</button>
+    </div>
+
+    <h3 style="margin:28px 0 14px; font-size:16px;">Themes</h3>
+    <div class="theme-grid" id="themeGrid"></div>
+
+    <div class="center-actions">
+      <button class="btn btn-ghost" onclick="goHome()">BACK TO MENU</button>
+    </div>
+  </section>
+
+  <!-- ============ HOW TO PLAY ============ -->
+  <section id="screen-howtoplay" class="screen">
+    <h2 class="section-title">How to Play</h2>
+    <p class="section-sub">Master MindMatch in four simple steps.</p>
+    <div class="glass info-block">
+      <div class="step-row"><span class="step-num">1</span><p>Tap any face-down card to flip it and reveal its symbol.</p></div>
+      <div class="step-row"><span class="step-num">2</span><p>Tap a second card. If the symbols match, both stay face-up and count toward your matches.</p></div>
+      <div class="step-row"><span class="step-num">3</span><p>If they don't match, both flip back down after a short pause — memorize their positions for next time.</p></div>
+      <div class="step-row"><span class="step-num">4</span><p>Clear the whole board to finish. Fewer moves, faster time, and higher accuracy mean a better score.</p></div>
+    </div>
+    <div class="glass info-block">
+      <h3>Scoring</h3>
+      <p>Your final score rewards speed, efficiency, and precision — scaled up for harder difficulties. Fewer wasted flips and a quicker clear both push your score higher.</p>
+    </div>
+    <div class="center-actions">
+      <button class="btn btn-primary" onclick="showScreen('difficulty')">PLAY NOW</button>
+      <button class="btn btn-ghost" onclick="goHome()">BACK</button>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT / PORTFOLIO ============ -->
+  <section id="screen-about" class="screen">
+    <h2 class="section-title">MindMatch</h2>
+    <p class="section-sub">A Professional Memory Training Game — Portfolio Showcase</p>
+
+    <div class="glass info-block">
+      <h3>Overview</h3>
+      <p>MindMatch is a polished memory-matching game focused on concentration, pattern recognition, and competitive scoring — built to demonstrate both game-development ability and product-level UI/UX design.</p>
+    </div>
+
+    <div class="glass info-block">
+      <h3>Key Features</h3>
+      <div class="feature-list">
+        <div class="feature-item">🎚️ Multiple difficulty levels</div>
+        <div class="feature-item">🔀 Dynamic card generation</div>
+        <div class="feature-item">🎬 Smooth card animations</div>
+        <div class="feature-item">⏱️ Live timer</div>
+        <div class="feature-item">🧮 Move tracking</div>
+        <div class="feature-item">🎯 Accuracy calculation</div>
+        <div class="feature-item">🏆 Personal best scores</div>
+        <div class="feature-item">📱 Responsive interface</div>
+        <div class="feature-item">✨ Professional game UI</div>
+        <div class="feature-item">🔊 Sound effects</div>
+        <div class="feature-item">📈 Progression system</div>
+        <div class="feature-item">♿ Accessibility support</div>
+      </div>
+    </div>
+
+    <div class="glass info-block">
+      <h3>Development Highlights</h3>
+      <p>Game state management, deterministic shuffle &amp; matching logic, an animation system built on CSS 3D transforms, a difficulty-scaled scoring model, session-based persistence, and a fully responsive layout system.</p>
+    </div>
+
+    <div class="glass info-block">
+      <h3>Technical Architecture</h3>
+      <div class="arch-tree">MindMatch
+│
+├── Game State
+├── Card System
+├── Matching Logic
+├── Score System
+├── Timer
+├── UI
+├── Animations
+├── Audio
+├── Settings
+└── Local Storage</div>
+    </div>
+
+    <div class="glass info-block">
+      <h3>Technologies</h3>
+      <div class="tech-field"><label>Game Engine / Framework</label><input type="text" placeholder="e.g. Vanilla JS"></div>
+      <div class="tech-field"><label>Programming Language</label><input type="text" placeholder="e.g. JavaScript (ES6)"></div>
+      <div class="tech-field"><label>UI Framework</label><input type="text" placeholder="e.g. Custom CSS"></div>
+      <div class="tech-field"><label>Animation System</label><input type="text" placeholder="e.g. CSS 3D Transforms"></div>
+      <div class="tech-field"><label>Storage System</label><input type="text" placeholder="e.g. In-memory session state"></div>
+      <div class="tech-field"><label>Version Control</label><input type="text" placeholder="e.g. Git"></div>
+    </div>
+
+    <div class="center-actions">
+      <button class="btn btn-primary" onclick="showScreen('difficulty')">PLAY GAME</button>
+      <button class="btn btn-ghost" onclick="goHome()">VIEW PROJECT</button>
+      <button class="btn btn-ghost" onclick="alert('Add your repository link here before publishing.')">SOURCE CODE</button>
+      <button class="btn btn-ghost" onclick="alert('Add your live demo link here before publishing.')">LIVE DEMO</button>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   MINDMATCH — GAME LOGIC
+   ========================================================= */
+
+const SYMBOL_POOL = ['🎮','🧠','🚀','⭐','🎯','⚡','🕹️','👾','💎','🔥','🌟','🎨','🛸','🎲','🏆','🧩','🔮','🎧'];
+
+const DIFFICULTIES = {
+  easy:   { label:'Easy',   cols:4, rows:4, pairs:8,  mult:1.0 },
+  medium: { label:'Medium', cols:4, rows:6, pairs:12, mult:1.4 },
+  hard:   { label:'Hard',   cols:6, rows:6, pairs:18, mult:1.9 }
+};
+const DIFF_ORDER = ['easy','medium','hard'];
+
+const THEMES = [
+  { name:'Classic', unlockAt:0,  colors:['#3B82F6','#8B5CF6'] },
+  { name:'Neon',    unlockAt:1,  colors:['#22D3EE','#22C55E'] },
+  { name:'Galaxy',  unlockAt:3,  colors:['#8B5CF6','#F472B6'] },
+  { name:'Cyber',   unlockAt:6,  colors:['#22D3EE','#3B82F6'] },
+  { name:'Arcade',  unlockAt:10, colors:['#F59E0B','#EF4444'] }
+];
+
+let state = {
+  difficulty:'easy',
+  cards:[],
+  flipped:[],
+  matchedCount:0,
+  moves:0,
+  wrongAttempts:0,
+  timerId:null,
+  seconds:0,
+  locked:false,
+  started:false
+};
+
+let settings = { sfx:true, music:false, vibration:true, dark:true, animQuality:'standard' };
+
+let progress = {
+  gamesPlayed:0, gamesCompleted:0, totalMatches:0, totalMoves:0,
+  bestScore:{ easy:null, medium:null, hard:null },
+  bestTime:{ easy:null, medium:null, hard:null }
+};
+
+let leaderboardData = {
+  easy:[
+    { name:'Aria K.', score:9850, time:80, demo:true },
+    { name:'Devon P.', score:9200, time:88, demo:true },
+    { name:'Sam R.', score:8750, time:95, demo:true }
+  ],
+  medium:[
+    { name:'Priya N.', score:12400, time:130, demo:true },
+    { name:'Leo M.', score:11800, time:142, demo:true },
+    { name:'Zoe T.', score:10950, time:155, demo:true }
+  ],
+  hard:[
+    { name:'Kai W.', score:17650, time:205, demo:true },
+    { name:'Nina F.', score:16300, time:224, demo:true },
+    { name:'Omar J.', score:15200, time:241, demo:true }
+  ]
+};
+
+let selectedDiff = 'easy';
+
+/* ---------- Ambient particles ---------- */
+function initParticles(){
+  const wrap = document.getElementById('particles');
+  const n = 18;
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className='particle';
+    const size = 4 + Math.random()*10;
+    p.style.width = size+'px';
+    p.style.height = size+'px';
+    p.style.left = Math.random()*100+'%';
+    p.style.top = Math.random()*100+'%';
+    p.style.animationDuration = (10+Math.random()*10)+'s';
+    p.style.animationDelay = (Math.random()*6)+'s';
+    wrap.appendChild(p);
+  }
+}
+initParticles();
+
+/* ---------- Navigation ---------- */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  window.scrollTo({top:0, behavior: settings.animQuality==='reduced' ? 'auto' : 'smooth'});
+  if(name==='difficulty') renderDifficultyGrid();
+  if(name==='settings') renderThemeGrid();
+}
+function goHome(){ stopTimer(); showScreen('home'); }
+
+/* ---------- Audio (WebAudio tones, no external files) ---------- */
+let audioCtx = null;
+function tone(freq, dur=0.09, type='sine', vol=0.06){
+  if(!settings.sfx) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur);
+    o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+const sfx = {
+  flip: ()=> tone(520,0.08,'triangle'),
+  match: ()=> { tone(660,0.1,'sine'); setTimeout(()=>tone(880,0.12,'sine'),90); },
+  mismatch: ()=> tone(180,0.16,'sawtooth',0.05),
+  click: ()=> tone(400,0.05,'square',0.03),
+  win: ()=> { [523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.18,'sine'),i*110)); },
+  best: ()=> { [784,988,1175,1568].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'triangle'),i*100)); }
+};
+function haptic(){ if(settings.vibration && navigator.vibrate) navigator.vibrate(15); }
+
+/* ---------- Difficulty selection ---------- */
+function renderDifficultyGrid(){
+  const grid = document.getElementById('diffGrid');
+  grid.innerHTML='';
+  DIFF_ORDER.forEach(key=>{
+    const d = DIFFICULTIES[key];
+    const div = document.createElement('div');
+    div.className = 'diff-card' + (key===selectedDiff ? ' selected':'');
+    div.tabIndex = 0;
+    div.setAttribute('role','button');
+    div.setAttribute('aria-pressed', key===selectedDiff ? 'true':'false');
+    const best = progress.bestScore[key];
+    div.innerHTML = `
+      <div class="diff-name">${d.label}</div>
+      <div class="diff-meta">${d.cols} × ${d.rows} grid · ${d.pairs} pairs</div>
+      ${best ? `<div class="diff-best">Best: ${best.toLocaleString()}</div>` : ''}
+    `;
+    div.onclick = ()=>{ selectedDiff = key; sfx.click(); renderDifficultyGrid(); };
+    div.onkeydown = (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); div.click(); } };
+    grid.appendChild(div);
+  });
+}
+
+/* ---------- Game setup ---------- */
+function buildDeck(pairs){
+  const chosen = SYMBOL_POOL.slice(0, pairs);
+  let deck = [...chosen, ...chosen].map((sym, i)=>({ id:i, symbol:sym, flipped:false, matched:false }));
+  // Fisher-Yates shuffle
+  for(let i=deck.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function startGame(){
+  state.difficulty = selectedDiff;
+  const d = DIFFICULTIES[state.difficulty];
+  state.cards = buildDeck(d.pairs);
+  state.flipped = [];
+  state.matchedCount = 0;
+  state.moves = 0;
+  state.wrongAttempts = 0;
+  state.seconds = 0;
+  state.locked = false;
+  state.started = false;
+  stopTimer();
+  renderBoard();
+  updateStatsBar();
+  showScreen('game');
+}
+
+function restartCurrentGame(){ selectedDiff = state.difficulty; startGame(); }
+
+function nextDifficulty(){
+  const idx = DIFF_ORDER.indexOf(state.difficulty);
+  selectedDiff = DIFF_ORDER[Math.min(idx+1, DIFF_ORDER.length-1)];
+  startGame();
+}
+
+function renderBoard(){
+  const d = DIFFICULTIES[state.difficulty];
+  const board = document.getElementById('board');
+  board.className = 'board grid-' + d.cols + 'x' + d.rows;
+  board.innerHTML = '';
+  state.cards.forEach((card, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.tabIndex = 0;
+    el.setAttribute('role','gridcell');
+    el.setAttribute('aria-label', 'Card ' + (idx+1) + (card.matched ? ', matched' : ', face down'));
+    el.dataset.index = idx;
+    el.innerHTML = `
+      <div class="card-face back" aria-hidden="true"></div>
+      <div class="card-face front" aria-hidden="true">${card.symbol}</div>
+    `;
+    el.onclick = ()=> handleCardClick(idx, el);
+    el.onkeydown = (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); handleCardClick(idx, el); } };
+    board.appendChild(el);
+  });
+}
+
+function handleCardClick(idx, el){
+  const card = state.cards[idx];
+  if(state.locked || card.flipped || card.matched) return;
+  if(state.flipped.length === 2) return;
+
+  if(!state.started){ state.started = true; startTimer(); }
+
+  card.flipped = true;
+  el.classList.add('flipped');
+  el.setAttribute('aria-label', 'Card showing ' + card.symbol);
+  sfx.flip(); haptic();
+  state.flipped.push({ idx, el });
+
+  if(state.flipped.length === 2){
+    state.moves++;
+    updateStatsBar();
+    state.locked = true;
+    const [a,b] = state.flipped;
+    const cardA = state.cards[a.idx], cardB = state.cards[b.idx];
+    if(cardA.symbol === cardB.symbol){
+      setTimeout(()=>{
+        cardA.matched = true; cardB.matched = true;
+        a.el.classList.add('matched'); b.el.classList.add('matched');
+        a.el.setAttribute('aria-label','Card matched');
+        b.el.setAttribute('aria-label','Card matched');
+        state.matchedCount++;
+        sfx.match();
+        state.flipped = [];
+        state.locked = false;
+        updateStatsBar();
+        checkWin();
+      }, 350);
+    } else {
+      state.wrongAttempts++;
+      a.el.classList.add('mismatch'); b.el.classList.add('mismatch');
+      sfx.mismatch();
+      setTimeout(()=>{
+        cardA.flipped=false; cardB.flipped=false;
+        a.el.classList.remove('flipped','mismatch');
+        b.el.classList.remove('flipped','mismatch');
+        a.el.setAttribute('aria-label','Card, face down');
+        b.el.setAttribute('aria-label','Card, face down');
+        state.flipped = [];
+        state.locked = false;
+        updateStatsBar();
+      }, 750);
+    }
+  }
+}
+
+function updateStatsBar(){
+  const d = DIFFICULTIES[state.difficulty];
+  document.getElementById('statTime').textContent = formatTime(state.seconds);
+  document.getElementById('statMoves').textContent = state.moves;
+  document.getElementById('statMatches').textContent = state.matchedCount + ' / ' + d.pairs;
+  const accuracy = state.moves === 0 ? 100 : Math.round((state.matchedCount / state.moves) * 100);
+  document.getElementById('statAccuracy').textContent = accuracy + '%';
+}
+
+function formatTime(s){
+  const m = Math.floor(s/60).toString().padStart(2,'0');
+  const sec = (s%60).toString().padStart(2,'0');
+  return m+':'+sec;
+}
+function startTimer(){
+  stopTimer();
+  state.timerId = setInterval(()=>{
+    state.seconds++;
+    document.getElementById('statTime').textContent = formatTime(state.seconds);
+  }, 1000);
+}
+function stopTimer(){ if(state.timerId){ clearInterval(state.timerId); state.timerId=null; } }
+
+function checkWin(){
+  const d = DIFFICULTIES[state.difficulty];
+  if(state.matchedCount === d.pairs){
+    stopTimer();
+    setTimeout(()=>finishGame(), 400);
+  }
+}
+
+/* ---------- Scoring ---------- */
+function computeScore(){
+  const d = DIFFICULTIES[state.difficulty];
+  const accuracy = state.moves === 0 ? 100 : Math.round((state.matchedCount / state.moves) * 100);
+  const baseline = d.pairs * 1000;
+  const timePenalty = state.seconds * 6;
+  const movePenalty = Math.max(0, state.moves - d.pairs) * 40;
+  let score = (baseline - timePenalty - movePenalty) * d.mult;
+  score = score * (0.5 + accuracy/200); // accuracy weighting
+  score = Math.max(100, Math.round(score));
+  return { score, accuracy };
+}
+
+function ratingFor(accuracy, moves, pairs){
+  const efficiency = pairs / Math.max(moves,1);
+  if(accuracy >= 85 && efficiency >= 0.55) return { stars:3, label:'Excellent' };
+  if(accuracy >= 65) return { stars:2, label:'Great' };
+  return { stars:1, label:'Good' };
+}
+
+function finishGame(){
+  const d = DIFFICULTIES[state.difficulty];
+  const { score, accuracy } = computeScore();
+  const rating = ratingFor(accuracy, state.moves, d.pairs);
+
+  progress.gamesPlayed++;
+  progress.gamesCompleted++;
+  progress.totalMatches += state.matchedCount;
+  progress.totalMoves += state.moves;
+
+  const prevBest = progress.bestScore[state.difficulty];
+  const isNewBest = !prevBest || score > prevBest;
+  if(isNewBest){
+    progress.bestScore[state.difficulty] = score;
+    progress.bestTime[state.difficulty] = state.seconds;
+  }
+
+  // Add to session leaderboard
+  leaderboardData[state.difficulty].push({ name:'You', score, time:state.seconds, demo:false });
+  leaderboardData[state.difficulty].sort((a,b)=>b.score-a.score);
+  leaderboardData[state.difficulty] = leaderboardData[state.difficulty].slice(0,8);
+
+  // Populate results screen
+  document.getElementById('finalScore').textContent = score.toLocaleString();
+  document.getElementById('ratingStars').textContent = '⭐'.repeat(rating.stars) + '☆'.repeat(3-rating.stars);
+  document.getElementById('ratingLabel').textContent = rating.label;
+  document.getElementById('rTime').textContent = formatTime(state.seconds);
+  document.getElementById('rMoves').textContent = state.moves;
+  document.getElementById('rAccuracy').textContent = accuracy + '%';
+  document.getElementById('rPairs').textContent = d.pairs + '/' + d.pairs;
+  document.getElementById('rBest').textContent = progress.bestScore[state.difficulty].toLocaleString();
+  document.getElementById('pbBadge').classList.toggle('hidden', !isNewBest);
+
+  const headings = ['MEMORY MASTER!','FLAWLESS RECALL!','BOARD CLEARED!'];
+  document.getElementById('resultsHeading').textContent = headings[Math.floor(Math.random()*headings.length)];
+
+  if(isNewBest){ sfx.best(); launchConfetti(); showToast('🏆 New personal best!'); }
+  else { sfx.win(); }
+
+  showScreen('results');
+  renderThemeGrid();
+}
+
+/* ---------- Leaderboard ---------- */
+function renderLeaderboard(activeDiff){
+  const diff = activeDiff || state.difficulty || 'easy';
+  const tabs = document.getElementById('lbTabs');
+  tabs.innerHTML = '';
+  DIFF_ORDER.forEach(key=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (key===diff ? ' active':'');
+    btn.textContent = DIFFICULTIES[key].label;
+    btn.onclick = ()=>renderLeaderboard(key);
+    tabs.appendChild(btn);
+  });
+
+  const list = document.getElementById('lbList');
+  list.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  leaderboardData[diff].forEach((entry, i)=>{
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    row.innerHTML = `
+      <div class="lb-rank">${medals[i] || (i+1)}</div>
+      <div><div class="lb-name">${entry.name}</div>${entry.demo ? '<div class="demo-tag">Demo data</div>' : ''}</div>
+      <div class="lb-score">${entry.score.toLocaleString()}</div>
+      <div class="lb-time">${formatTime(entry.time)}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ---------- Themes ---------- */
+function renderThemeGrid(){
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = '';
+  THEMES.forEach(t=>{
+    const unlocked = progress.gamesCompleted >= t.unlockAt;
+    const card = document.createElement('div');
+    card.className = 'theme-card' + (unlocked ? '' : ' locked');
+    card.innerHTML = `
+      <div class="theme-swatch" style="background:linear-gradient(120deg, ${t.colors[0]}, ${t.colors[1]})"></div>
+      <div class="theme-name">${t.name}</div>
+      <div class="theme-lock">${unlocked ? 'Unlocked' : 'Complete ' + t.unlockAt + ' games'}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ---------- Settings actions ---------- */
+function resetProgress(){
+  if(!confirm('Reset all progress, scores, and unlocked themes for this session?')) return;
+  progress = { gamesPlayed:0, gamesCompleted:0, totalMatches:0, totalMoves:0,
+    bestScore:{ easy:null, medium:null, hard:null }, bestTime:{ easy:null, medium:null, hard:null } };
+  leaderboardData.easy = leaderboardData.easy.filter(e=>e.demo);
+  leaderboardData.medium = leaderboardData.medium.filter(e=>e.demo);
+  leaderboardData.hard = leaderboardData.hard.filter(e=>e.demo);
+  renderThemeGrid();
+  showToast('Progress reset.');
+}
+
+/* ---------- Toast + confetti ---------- */
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function launchConfetti(){
+  if(settings.animQuality==='reduced') return;
+  const colors = ['#3B82F6','#8B5CF6','#22D3EE','#22C55E','#F8FAFC'];
+  for(let i=0;i<36;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random()*100+'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (2+Math.random()*1.5)+'s';
+    p.style.opacity = 0.85;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 3600);
+  }
+}
+
+/* ---------- Init ---------- */
+renderDifficultyGrid();
+</script>
+</body>
+</html>
